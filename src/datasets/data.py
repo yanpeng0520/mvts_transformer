@@ -95,7 +95,6 @@ class BaseData(object):
         else:
             self.n_proc = min(n_proc, cpu_count())
 
-
 class WeldData(BaseData):
     """
     Dataset class for welding dataset.
@@ -217,12 +216,17 @@ class TSRegressionArchive(BaseData):
         feature_df: (num_samples * seq_len, feat_dim) dataframe; contains the subset of columns of `all_df` which correspond to selected features
         feature_names: names of columns contained in `feature_df` (same as feature_df.columns)
         all_IDs: (num_samples,) series of IDs contained in `all_df`/`feature_df` (same as all_df.index.unique() )
-        labels_df: (num_samples, num_labels) pd.DataFrame of label(s) for each sample
+        ??????labels_df: (num_samples, num_labels) pd.DataFrame of label(s) for each sample????????
         max_seq_len: maximum sequence (time series) length. If None, script argument `max_seq_len` will be used.
             (Moreover, script argument overrides this attribute)
     """
 
     def __init__(self, root_dir, file_list=None, pattern=None, n_proc=1, limit_size=None, config=None):
+        # root_dir: config['data_dir']
+        # file_list: list of file names to load, or None to load all files in root_dir
+        # pattern: select train or test, or all data
+        # n_proc: number of processes to use for loading data, Number of processes for data loading/preprocessing. By default, equals num. of available cores
+        #limit_size = config['limit_size'], dataset to specified smaller random sample, or proportion of original size if in (0, 1]
 
         #self.set_num_processes(n_proc=n_proc)
 
@@ -268,7 +272,7 @@ class TSRegressionArchive(BaseData):
             # by default evaluate on
             selected_paths = data_paths
         else:
-            selected_paths = list(filter(lambda x: re.search(pattern, x), data_paths))
+            selected_paths = list(filter(lambda x: re.search(pattern, x), data_paths)) # create a list of paths that match the pattern
 
         input_paths = [p for p in selected_paths if os.path.isfile(p) and p.endswith('.ts')]
         if len(input_paths) == 0:
@@ -442,7 +446,7 @@ class PMUData(BaseData):
         df = pd.read_csv(filepath)
         return df
 
-
+# get data class
 data_factory = {'weld': WeldData,
                 'tsra': TSRegressionArchive,
                 'pmu': PMUData}

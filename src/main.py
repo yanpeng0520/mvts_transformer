@@ -58,8 +58,8 @@ def main(config):
 
     # Build data
     logger.info("Loading and preprocessing data ...")
-    data_class = data_factory[config['data_class']]
-    my_data = data_class(config['data_dir'], pattern=config['pattern'], n_proc=config['n_proc'], limit_size=config['limit_size'], config=config)
+    data_class = data_factory[config['data_class']] # for example, 'tsra': TSRegressionArchive
+    my_data = data_class(config['data_dir'], pattern=config['pattern'], n_proc=config['n_proc'], limit_size=config['limit_size'], config=config) # create instance from data class
     feat_dim = my_data.feature_df.shape[1]  # dimensionality of data features
     if config['task'] == 'classification':
         validation_method = 'StratifiedShuffleSplit'
@@ -141,6 +141,7 @@ def main(config):
 
     # Create model
     logger.info("Creating model ...")
+    # !!!!!!!!! Model is here !!!!!!!!!
     model = model_factory(config, my_data)
 
     if config['freeze']:
@@ -201,6 +202,8 @@ def main(config):
         return
     
     # Initialize data generators
+    # collate_fn return X, targets, padding_masks, IDs
+    # runner_class is the class of the runner, SupervisedRunner or UnsupervisedRunner
     dataset_class, collate_fn, runner_class = pipeline_factory(config)
     val_dataset = dataset_class(val_data, val_indices)
 
@@ -239,7 +242,7 @@ def main(config):
 
     logger.info('Starting training...')
     for epoch in tqdm(range(start_epoch + 1, config["epochs"] + 1), desc='Training Epoch', leave=False):
-        mark = epoch if config['save_all'] else 'last'
+        mark = epoch if config['save_all'] else 'last' # default is to save only the last epoch
         epoch_start_time = time.time()
         aggr_metrics_train = trainer.train_epoch(epoch)  # dictionary of aggregate epoch metrics
         epoch_runtime = time.time() - epoch_start_time
