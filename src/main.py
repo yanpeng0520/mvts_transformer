@@ -58,8 +58,8 @@ def main(config):
 
     # Build data
     logger.info("Loading and preprocessing data ...")
-    data_class = data_factory[config['data_class']]
-    my_data = data_class(config['data_dir'], pattern=config['pattern'], n_proc=config['n_proc'], limit_size=config['limit_size'], config=config)
+    data_class = data_factory[config['data_class']] # for example, 'tsra': TSRegressionArchive
+    my_data = data_class(config['data_dir'], pattern=config['pattern'], n_proc=config['n_proc'], limit_size=config['limit_size'], config=config) # create instance from data class
     feat_dim = my_data.feature_df.shape[1]  # dimensionality of data features
     if config['task'] == 'classification':
         validation_method = 'StratifiedShuffleSplit'
@@ -74,7 +74,7 @@ def main(config):
     val_data = my_data
     val_indices = []
     if config['test_pattern']:  # used if test data come from different files / file patterns
-        test_data = data_class(config['data_dir'], pattern=config['test_pattern'], n_proc=-1, config=config)
+        test_data = data_class(config['data_dir'], pattern='test', n_proc=-1, config=config)
         test_indices = test_data.all_IDs
     if config['test_from']:  # load test IDs directly from file, if available, otherwise use `test_set_ratio`. Can work together with `test_pattern`
         test_indices = list(set([line.rstrip() for line in open(config['test_from']).readlines()]))
@@ -84,7 +84,7 @@ def main(config):
             pass  # in case indices are non-integers
         logger.info("Loaded {} test IDs from file: '{}'".format(len(test_indices), config['test_from']))
     if config['val_pattern']:  # used if val data come from different files / file patterns
-        val_data = data_class(config['data_dir'], pattern=config['val_pattern'], n_proc=-1, config=config)
+        val_data = data_class(config['data_dir'], pattern='val', n_proc=-1, config=config)
         val_indices = val_data.all_IDs
 
     # Note: currently a validation set must exist, either with `val_pattern` or `val_ratio`
@@ -120,27 +120,28 @@ def main(config):
                        'test_indices': list(test_indices)}, f, indent=4)
 
     # Pre-process features
-    normalizer = None
-    if config['norm_from']:
-        with open(config['norm_from'], 'rb') as f:
-            norm_dict = pickle.load(f)
-        normalizer = Normalizer(**norm_dict)
-    elif config['normalization'] is not None:
-        normalizer = Normalizer(config['normalization'])
-        my_data.feature_df.loc[train_indices] = normalizer.normalize(my_data.feature_df.loc[train_indices])
-        if not config['normalization'].startswith('per_sample'):
-            # get normalizing values from training set and store for future use
-            norm_dict = normalizer.__dict__
-            with open(os.path.join(config['output_dir'], 'normalization.pickle'), 'wb') as f:
-                pickle.dump(norm_dict, f, pickle.HIGHEST_PROTOCOL)
-    if normalizer is not None:
-        if len(val_indices):
-            val_data.feature_df.loc[val_indices] = normalizer.normalize(val_data.feature_df.loc[val_indices])
-        if len(test_indices):
-            test_data.feature_df.loc[test_indices] = normalizer.normalize(test_data.feature_df.loc[test_indices])
+    # normalizer = None
+    # if config['norm_from']:
+    #     with open(config['norm_from'], 'rb') as f:
+    #         norm_dict = pickle.load(f)
+    #     normalizer = Normalizer(**norm_dict)
+    # elif config['normalization'] is not None:
+    #     normalizer = Normalizer(config['normalization'])
+    #     my_data.feature_df.loc[train_indices] = normalizer.normalize(my_data.feature_df.loc[train_indices])
+    #     if not config['normalization'].startswith('per_sample'):
+    #         # get normalizing values from training set and store for future use
+    #         norm_dict = normalizer.__dict__
+    #         with open(os.path.join(config['output_dir'], 'normalization.pickle'), 'wb') as f:
+    #             pickle.dump(norm_dict, f, pickle.HIGHEST_PROTOCOL)
+    # if normalizer is not None:
+    #     if len(val_indices):
+    #         val_data.feature_df.loc[val_indices] = normalizer.normalize(val_data.feature_df.loc[val_indices])
+    #     if len(test_indices):
+    #         test_data.feature_df.loc[test_indices] = normalizer.normalize(test_data.feature_df.loc[test_indices])
 
     # Create model
     logger.info("Creating model ...")
+    # !!!!!!!!! Model is here !!!!!!!!!
     model = model_factory(config, my_data)
 
     if config['freeze']:
@@ -201,6 +202,8 @@ def main(config):
         return
     
     # Initialize data generators
+    # collate_fn return X, targets, padding_masks, IDs
+    # runner_class is the class of the runner, SupervisedRunner or UnsupervisedRunner
     dataset_class, collate_fn, runner_class = pipeline_factory(config)
     val_dataset = dataset_class(val_data, val_indices)
 
@@ -239,7 +242,7 @@ def main(config):
 
     logger.info('Starting training...')
     for epoch in tqdm(range(start_epoch + 1, config["epochs"] + 1), desc='Training Epoch', leave=False):
-        mark = epoch if config['save_all'] else 'last'
+        mark = epoch if config['save_all'] else 'last' # default is to save only the last epoch
         epoch_start_time = time.time()
         aggr_metrics_train = trainer.train_epoch(epoch)  # dictionary of aggregate epoch metrics
         epoch_runtime = time.time() - epoch_start_time
