@@ -14,7 +14,7 @@ RUN pip install -r /tmp/failsafe_requirements.txt
 # Deploy a nice prompt
 RUN curl -sS https://starship.rs/install.sh | sh -s -- --yes
 
-WORKDIR /app
+#WORKDIR /app
 
 EXPOSE 22
 
