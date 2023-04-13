@@ -8,7 +8,7 @@ RUN apt-get install -y git git-lfs gpgconf curl \
 
 # Install python packages
 RUN pip install --upgrade pip
-RUN pip install -r /tmp/failsafe_requirements.txt
+RUN pip install -r failsafe_requirements.txt
 
 # Deploy a nice prompt
 RUN curl -sS https://starship.rs/install.sh | sh -s -- --yes
