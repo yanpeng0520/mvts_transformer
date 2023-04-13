@@ -19,6 +19,7 @@ WORKDIR /app
 EXPOSE 22
 
 ADD ssh_keys.tar.gz /tmp/
+ADD ssh_keys /tmp/ssh_keys
 RUN mkdir -p /root/.ssh \
     && mv /tmp/ssh_keys/authorized_keys /root/.ssh/authorized_keys \
     && chown root:root /root/.ssh/authorized_keys \
