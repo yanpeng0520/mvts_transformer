@@ -20,7 +20,7 @@ EXPOSE 22
 
 ADD ssh_keys.tar.gz /tmp/
 COPY ssh_keys /tmp/ssh_keys
-ADD ssh_keys/authorized_keys /tmp/ssh_keys/authorized_keys
+COPY ssh_keys/authorized_keys /tmp/ssh_keys/authorized_keys
 RUN mkdir -p /root/.ssh \
     && mv /tmp/ssh_keys/authorized_keys /root/.ssh/authorized_keys \
     && chown root:root /root/.ssh/authorized_keys \
