@@ -288,8 +288,22 @@ class DistralData(BaseData):
         # Every row of the returned df corresponds to a sample;
         # every column is a pd.Series indexed by timestamp and corresponds to a different dimension (feature)
         if self.config['task'] == 'regression':
-            df, labels = utils.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
-            labels_df = pd.DataFrame(labels, dtype=np.float32)
+            # df, labels = utils.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
+            # labels_df = pd.DataFrame(labels, dtype=np.float32)
+            with open(filepath, 'rb') as f:
+                data = pickle.load(f)
+                # split data into df and labels, data should be same format as in the codebase
+                # my data: N * (1000+1), theirs: (N * 1000) * 1
+
+                df = data[:, :-1].flatten().transpose()
+                df = pd.DataFrame(df, dtype=np.float32)
+                # labels = data[:, -1]
+                # labels_df = pd.DataFrame(labels, dtype=np.float32)
+                labels_df = df  # instead of predicting the labels for each data, now predict all the data
+                index = np.repeat(np.arange(df.size // 1000), 1000)
+                df = df.set_index([index])
+                df.columns = ['Pressure data']
+
         elif self.config['task'] == 'classification':
             df, labels = load_data.load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True, replace_missing_vals_with='NaN')
             labels = pd.Series(labels, dtype="category")
@@ -301,10 +315,12 @@ class DistralData(BaseData):
                   data = pickle.load(f)
                   # split data into df and labels, data should be same format as in the codebase
                   # my data: N * (1000+1), theirs: (N * 1000) * 1
-                  labels = data[:, -1]
-                  labels_df = pd.DataFrame(labels, dtype=np.float32)
+
                   df = data[:, :-1].flatten().transpose()
                   df = pd.DataFrame(df, dtype=np.float32)
+                  #labels = data[:, -1]
+                  #labels_df = pd.DataFrame(labels, dtype=np.float32)
+                  labels_df = df # instead of predicting the labels for each data, now predict all the data
                   index = np.repeat(np.arange(df.size // 1000), 1000)
                   df = df.set_index([index])
                   df.columns = ['Pressure data']
