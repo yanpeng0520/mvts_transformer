@@ -301,10 +301,12 @@ class DistralData(BaseData):
                   data = pickle.load(f)
                   # split data into df and labels, data should be same format as in the codebase
                   # my data: N * (1000+1), theirs: (N * 1000) * 1
-                  labels = data[:, -1]
-                  labels_df = pd.DataFrame(labels, dtype=np.float32)
+
                   df = data[:, :-1].flatten().transpose()
                   df = pd.DataFrame(df, dtype=np.float32)
+                  #labels = data[:, -1]
+                  #labels_df = pd.DataFrame(labels, dtype=np.float32)
+                  labels_df = df # instead of predicting the labels for each data, now predict all the data
                   index = np.repeat(np.arange(df.size // 1000), 1000)
                   df = df.set_index([index])
                   df.columns = ['Pressure data']

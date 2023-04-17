@@ -2,7 +2,7 @@
 FROM python:3.8
 
 # Update packages and install core software
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update && apt-get -y upgrade && apt-get openssh-server -y
 RUN apt-get install -y git git-lfs gpgconf curl \
             libgit2-dev
 
@@ -25,3 +25,6 @@ RUN mkdir -p /root/.ssh \
     && mv /tmp/ssh_keys/authorized_keys /root/.ssh/authorized_keys \
     && chown root:root /root/.ssh/authorized_keys \
     && rm -rf /tmp/ssh_keys ssh_keys.tar.gz
+
+
+RUN service ssh start
