@@ -104,7 +104,7 @@ def collate_superv(data, max_len=None):
     features, labels, IDs = zip(*data)
 
     # Stack and pad features and masks (convert 2D to 3D tensors, i.e. add batch dimension)
-    lengths = [X.shape[0] for X in features]  # original sequence length for each time series
+    lengths = [X.shape[0] for X in features]  # original sequence length for each time series, in our case length is 1000
     if max_len is None:
         max_len = max(lengths)
     X = torch.zeros(batch_size, max_len, features[0].shape[-1])  # (batch_size, padded_length, feat_dim)
@@ -112,8 +112,8 @@ def collate_superv(data, max_len=None):
         end = min(lengths[i], max_len)
         X[i, :end, :] = features[i][:end, :]
 
-    targets = torch.stack(labels, dim=0)  # (batch_size, num_labels)
-
+    #targets = torch.stack(labels, dim=0)  # (batch_size, num_labels)
+    targets = X
     padding_masks = padding_mask(torch.tensor(lengths, dtype=torch.int16),
                                  max_len=max_len)  # (batch_size, padded_length) boolean tensor, "1" means keep
 

@@ -278,12 +278,14 @@ class DistralData(BaseData):
         input_paths = [p for p in selected_paths if os.path.isfile(p) and p.endswith('.pkl')]
         if len(input_paths) == 0:
             raise Exception("No .pkl files found using pattern: '{}'".format(pattern))
-
-        all_df, labels_df = self.load_single(input_paths[0])  # a single file contains dataset
+        if pattern == 'train':
+            all_df, labels_df = self.load_single(input_paths[0])  # a single file contains dataset
+        else:
+            all_df, labels_df = self.load_single(input_paths[0], pattern=pattern)
 
         return all_df, labels_df
 
-    def load_single(self, filepath):
+    def load_single(self, filepath, pattern=None):
 
         # Every row of the returned df corresponds to a sample;
         # every column is a pd.Series indexed by timestamp and corresponds to a different dimension (feature)
@@ -294,9 +296,11 @@ class DistralData(BaseData):
                 data = pickle.load(f)
                 # split data into df and labels, data should be same format as in the codebase
                 # my data: N * (1000+1), theirs: (N * 1000) * 1
-
-                df = data[:, :-1].flatten().transpose()
-                df = pd.DataFrame(df, dtype=np.float32)
+                if pattern != 'train':
+                    df = data[:, :-1].flatten().transpose()
+                    df = pd.DataFrame(df, dtype=np.float32)
+                else:
+                    df = data[:, :-1][data[:, -1] == 1].flatten().transpose()
                 # labels = data[:, -1]
                 # labels_df = pd.DataFrame(labels, dtype=np.float32)
                 labels_df = df  # instead of predicting the labels for each data, now predict all the data
@@ -318,9 +322,9 @@ class DistralData(BaseData):
 
                   df = data[:, :-1].flatten().transpose()
                   df = pd.DataFrame(df, dtype=np.float32)
-                  #labels = data[:, -1]
-                  #labels_df = pd.DataFrame(labels, dtype=np.float32)
-                  labels_df = df # instead of predicting the labels for each data, now predict all the data
+                  labels = data[:, -1]
+                  labels_df = pd.DataFrame(labels, dtype=np.float32)
+                  #labels_df = df # instead of predicting the labels for each data, now predict all the data, not right
                   index = np.repeat(np.arange(df.size // 1000), 1000)
                   df = df.set_index([index])
                   df.columns = ['Pressure data']
